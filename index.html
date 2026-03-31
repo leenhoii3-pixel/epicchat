@@ -370,6 +370,72 @@ nickChangeBtn.onclick = async () => {
 
 document.getElementById("inputArea").appendChild(nickChangeBtn);
   </script>
+  <script>
+// ==========================
+// 😀 이모지 UI 생성 (좌측 상단)
+// ==========================
+const mood = document.createElement("div");
+mood.style.position = "fixed";
+mood.style.top = "10px";
+mood.style.left = "10px";
+mood.style.fontSize = "30px";
+mood.style.zIndex = "9999";
+mood.textContent = "🙂";
+
+document.body.appendChild(mood);
+
+
+// ==========================
+// 📊 최근 메시지 기록 저장
+// ==========================
+let msgTimes = [];
+
+// 메시지 감지
+const moodObserver = new MutationObserver(() => {
+  const now = Date.now();
+
+  document.querySelectorAll(".msg").forEach(msg => {
+    if (msg.dataset.timeTracked) return;
+
+    msg.dataset.timeTracked = "true";
+    msgTimes.push(now);
+  });
+});
+
+moodObserver.observe(document.getElementById("chat"), {
+  childList: true,
+  subtree: true
+});
+
+
+// ==========================
+// ⏱️ 30초 기준 계산
+// ==========================
+setInterval(() => {
+  const now = Date.now();
+
+  // 30초 이전 메시지 제거
+  msgTimes = msgTimes.filter(t => now - t < 30000);
+
+  const count = msgTimes.length;
+
+  // 😈 조건 분기
+  if (count === 0) {
+    mood.textContent = "🙂";
+  } else if (count < 10) {
+    mood.textContent = "😄";
+  } else if (count < 20) {
+    mood.textContent = "😅";
+  } else if (count < 30) {
+    mood.textContent = "😶";
+  } else if (count < 60) {
+    mood.textContent = "😡";
+  } else {
+    mood.textContent = "💥";
+  }
+
+}, 1000);
+  </script>
 
 </body>
 </html>
