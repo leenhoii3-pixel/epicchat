@@ -238,6 +238,41 @@ redGlowObserver.observe(chat, {
   subtree: true
 });
 </script>
+  <script>
+// 🔊 사운드 파일
+const soundNormal = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
+const soundMine = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+
+// 🔥 메시지 감지
+const soundObserver = new MutationObserver(() => {
+  if (!window.myUid) return;
+
+  document.querySelectorAll(".msg").forEach(msg => {
+    if (msg.dataset.soundPlayed) return;
+
+    msg.dataset.soundPlayed = "true";
+
+    const uidEl = msg.querySelector("small");
+    if (!uidEl) return;
+
+    const isMine = uidEl.innerText.trim() === window.myUid.trim();
+
+    // 🎧 효과음 재생
+    if (isMine) {
+      soundMine.currentTime = 0;
+      soundMine.play();
+    } else {
+      soundNormal.currentTime = 0;
+      soundNormal.play();
+    }
+  });
+});
+
+soundObserver.observe(document.getElementById("chat"), {
+  childList: true,
+  subtree: true
+});
+  </script>
 
 </body>
 </html>
