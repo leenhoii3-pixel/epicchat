@@ -273,6 +273,103 @@ soundObserver.observe(document.getElementById("chat"), {
   subtree: true
 });
   </script>
+  <script>
+// ==========================
+// 😎 닉네임 설정
+// ==========================
+let nickname = localStorage.getItem("nickname");
+
+if (!nickname) {
+  nickname = prompt("닉네임 입력 😎");
+  localStorage.setItem("nickname", nickname);
+}
+
+
+// ==========================
+// 🚀 sendMsg 덮어쓰기 (닉네임 추가)
+// ==========================
+const originalSendMsgNick = window.sendMsg;
+
+window.sendMsg = async () => {
+  const input = document.getElementById("msgInput");
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  await addDoc(collection(window.db, "chat"), {
+    text,
+    uid: window.myUid,
+    nickname: nickname, // 🔥 핵심
+    createdAt: Date.now(),
+    pinned: false
+  });
+
+  input.value = "";
+};
+
+
+// ==========================
+// 🎨 닉네임 표시 (UID 대신)
+// ==========================
+const nickObserver = new MutationObserver(() => {
+  document.querySelectorAll(".msg").forEach(msg => {
+    if (msg.dataset.nickApplied) return;
+
+    const small = msg.querySelector("small");
+    if (!small) return;
+
+    msg.dataset.nickApplied = "true";
+
+    const uid = small.innerText.trim();
+
+    // Firestore에 nickname 있으면 사용
+    const nickMatch = msg.innerHTML.match(/<b>(.*?)<\/b>/);
+
+    if (msg.innerHTML.includes(uid)) {
+      if (uid === window.myUid) {
+        small.innerText = nickname + " (나)";
+      }
+    }
+  });
+});
+
+nickObserver.observe(document.getElementById("chat"), {
+  childList: true,
+  subtree: true
+});
+  </script>
+  <script>
+// ==========================
+// ✏️ 닉네임 변경 (실시간 반영)
+// ==========================
+const nickChangeBtn = document.createElement("button");
+nickChangeBtn.textContent = "닉변 😎";
+nickChangeBtn.style.marginLeft = "5px";
+
+nickChangeBtn.onclick = async () => {
+  const newNick = prompt("새 닉네임 입력 😎");
+
+  if (!newNick) return;
+
+  // 🔥 로컬 저장
+  localStorage.setItem("nickname", newNick);
+  window.myNick = newNick;
+
+  // 🔥 이미 화면에 있는 내 메시지 전부 변경
+  document.querySelectorAll(".msg").forEach(msg => {
+    const small = msg.querySelector("small");
+    if (!small) return;
+
+    if (small.innerText.includes("(나)") || small.innerText === window.myUid) {
+      small.innerText = newNick + " (나)";
+    }
+  });
+
+  alert("닉네임 변경 완료 😈");
+};
+
+document.getElementById("inputArea").appendChild(nickChangeBtn);
+  </script>
 
 </body>
 </html>
