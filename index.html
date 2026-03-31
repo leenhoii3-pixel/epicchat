@@ -108,7 +108,7 @@ signInAnonymously(auth);
 onAuthStateChanged(auth, (user) => {
   if (user) {
     myUid = user.uid;
-    myUid = user.uid;
+    window.myUid = myUid;
 console.log("UID:", myUid);
     console.log("UID:", myUid);
   }
