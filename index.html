@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>🔥 EPic Chat 🔥</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  background: #111;
+  color: white;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+h1 {
+  text-align: center;
+  color: gold;
+  text-shadow: 0 0 10px gold;
+}
+
+#chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.msg {
+  background: #222;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 10px;
+  transform: translateY(20px);
+  opacity: 0;
+  animation: rise 0.3s forwards;
+}
+
+.pinned {
+  border: 2px solid gold;
+}
+
+@keyframes rise {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+#inputArea {
+  display: flex;
+  padding: 10px;
+  background: #000;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+}
+
+button {
+  padding: 10px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🔥 EPic Chat 🔥</h1>
+
+<div id="chat"></div>
+
+<div id="inputArea">
+  <input id="msgInput" maxlength="100" placeholder="100자 제한 😎">
+  <button onclick="sendMsg()">전송</button>
+</div>
+
+<button onclick="adminLogin()">관리자</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDMaTGCLIlnmnXLaMuMxjTpWuM25H6Yrkc",
+  authDomain: "happy-f015b.firebaseapp.com",
+  projectId: "happy-f015b",
+  storageBucket: "happy-f015b.appspot.com",
+  messagingSenderId: "944621780782",
+  appId: "1:944621780782:web:9675dc3e6aedac9677c4bf"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let myUid = null;
+let isAdmin = false;
+
+// 로그인
+signInAnonymously(auth);
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    myUid = user.uid;
+    console.log("UID:", myUid);
+  }
+});
+
+// 메시지 보내기
+window.sendMsg = async () => {
+  const input = document.getElementById("msgInput");
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  if (text.length > 100) {
+    alert("100자 넘음 😡");
+    return;
+  }
+
+  await addDoc(collection(db, "chat"), {
+    text,
+    uid: myUid,
+    createdAt: Date.now(),
+    pinned: false
+  });
+
+  input.value = "";
+};
+
+// 엔터 전송
+document.getElementById("msgInput")
+  .addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendMsg();
+  });
+
+// 🔥 정렬 수정 (핵심!!)
+const q = query(
+  collection(db, "chat"),
+  orderBy("createdAt", "asc")
+);
+
+// 실시간 채팅
+onSnapshot(q, (snapshot) => {
+  const chat = document.getElementById("chat");
+  chat.innerHTML = "";
+
+  let pinned = [];
+  let normal = [];
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const item = { id: docSnap.id, ...data };
+
+    if (data.pinned) pinned.push(item);
+    else normal.push(item);
+  });
+
+  const all = [...pinned, ...normal];
+
+  all.forEach(data => {
+    const div = document.createElement("div");
+    div.className = "msg";
+    if (data.pinned) div.classList.add("pinned");
+
+    div.innerHTML = `
+      ${data.text}
+      <br><small>${data.uid}</small>
+    `;
+
+    if (isAdmin) {
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "삭제";
+      delBtn.onclick = () =>
+        deleteDoc(doc(db, "chat", data.id));
+
+      const pinBtn = document.createElement("button");
+      pinBtn.textContent = data.pinned ? "고정해제" : "고정";
+      pinBtn.onclick = () =>
+        updateDoc(doc(db, "chat", data.id), {
+          pinned: !data.pinned
+        });
+
+      div.appendChild(delBtn);
+      div.appendChild(pinBtn);
+    }
+
+    chat.appendChild(div);
+  });
+
+  chat.scrollTop = chat.scrollHeight;
+});
+
+// 관리자
+window.adminLogin = () => {
+  const code = prompt("관리자 코드 입력");
+
+  if (code === "201341") {
+    isAdmin = true;
+    alert("관리자 ON 🔥");
+  } else {
+    alert("틀림 ㅋㅋ");
+  }
+};
+</script>
+
+</body>
+</html>
