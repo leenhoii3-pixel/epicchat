@@ -108,6 +108,8 @@ signInAnonymously(auth);
 onAuthStateChanged(auth, (user) => {
   if (user) {
     myUid = user.uid;
+    myUid = user.uid;
+console.log("UID:", myUid);
     console.log("UID:", myUid);
   }
 });
@@ -209,6 +211,36 @@ window.adminLogin = () => {
   }
 };
 </script>
+  </script>
+
+<script>
+const redGlowObserver = new MutationObserver(() => {
+  const myUid = window.myUid;
+
+  document.querySelectorAll(".msg").forEach(msg => {
+    if (msg.dataset.glow) return;
+    msg.dataset.glow = "true";
+
+    const uidEl = msg.querySelector("small");
+    if (!uidEl) return;
+
+    if (uidEl.innerText === myUid) {
+      msg.style.border = "2px solid red";
+      msg.style.boxShadow = "0 0 10px red, 0 0 20px red";
+    }
+  });
+});
+
+const chat = document.getElementById("chat");
+
+redGlowObserver.observe(chat, {
+  childList: true,
+  subtree: true
+});
+</script>
+
+</body>
+</html>
 
 </body>
 </html>
